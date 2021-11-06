@@ -1,0 +1,38 @@
+{%extends "layout.html" %}
+{%block body%}
+
+<h3>Coin List</h3>
+<hr>
+<hr>
+<table class="table">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Date</th>
+        <th scope="col">Coin</th>
+        <th scope="col">Average</th>
+        <th scope="col">Total Cost</th>
+        <th scope="col">Quantity</th>
+      </tr>
+    </thead>
+    {%if all_info %}
+      {%for info in all_info%}  
+        <tbody>
+        <tr>
+            <th scope="row">{{loop.index}}.</th>
+            <td>{{info.date.strftime("%m/%d/%Y %H:%M:%S")}}</td>
+            <td>{{info.name}}</td>
+            <td>{{info.buyprice|round(6)}}</td>
+            <td>{{info.cost|round(6)}}</td>
+            <td>{{(info.cost/info.buyprice)|round(6)}}</td>
+
+        </tr>
+        
+        
+    </tbody>
+    {% endfor %}
+  </table>
+{%else%}
+<div class = "alert alert-danger">There are currently no registered coins</div>
+{%endif%}
+{%endblock%}

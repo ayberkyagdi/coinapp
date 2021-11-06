@@ -1,0 +1,14 @@
+{%extends "layout.html" %}
+{%block body%}
+{% from "includes/formhelpers.html" import render_field %}
+<h3>Register</h3>
+<hr>
+<form method="POST">
+    {{ render_field(form.username_register, class = "form-control")}}
+    {{ render_field(form.email_register, class = "form-control") }}
+    {{ render_field(form.password_register, class = "form-control") }}
+    {{ render_field(form.confirm, class = "form-control") }}
+    <button type="submit" class="btn btn-secondary">Sign Up</button>
+</form>
+<hr>
+{%endblock%}

@@ -1,0 +1,68 @@
+{%extends "layout.html" %}
+{%block body%}
+
+<h3>Transaction History of {{name}}</h3>
+<hr>
+<hr>
+<table class="table">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Date</th>
+        <th scope="col">Coin</th>
+        <th scope="col">Buy Price Avg.</th>
+        <th scope="col">Sell Price</th>
+        <th scope="col">Total Cost</th>
+        <th scope="colnet">Net Profit</th>
+        <th scope="col">Profit Percentage</th>
+
+      </tr>
+    </thead>
+    {%if all_info %}
+      {%for info in all_info%}  
+        <tbody>
+        <tr>
+            <th scope="row">{{loop.index}}.</th>
+            <td>{{info.date.strftime("%m/%d/%Y %H:%M:%S")}}</td>
+            <td>{{info.name}}</td>
+            <td>{{info.buyprice|round(3)}}</td>
+            {%if info.position == "CLOSED" %}
+                <td>{{info.sellprice|round(3)}}</td>
+            {%else%}
+                <td>HOLD</td>
+            {%endif%}
+            <td>{{info.cost|round(3)}}$</td>
+            {%if info.position == "CLOSED" %}
+                {%if info.sellprice > info.buyprice %}
+                    <td class="text-success">{{((info.cost/info.buyprice)*((info.sellprice-info.buyprice)))|round(3)}}$</td>
+                    <td class="text-success">% {{ ((((info.sellprice/info.buyprice)*100)-100))|round(3)}}</td>
+                {%else%}
+                    <td class="text-danger">{{((info.cost/info.buyprice)*((info.sellprice-info.buyprice)))|round(3)}}$</td>
+                    <td class="text-danger">% {{ ((((info.sellprice/info.buyprice)*100)-100))|round(3)}}</td>
+                    
+                {%endif%}
+            {%else%}
+                <td ></td>
+                <td ></td>
+            {%endif%}
+        </tr>
+        
+        {% endfor %}
+    </tbody>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            {%if net_profit>0 %}
+                <th class="text-success">Total:{{net_profit|round(3)}}$</th>
+            {%else%}
+                <th class="text-danger">Total:{{net_profit|round(3)}}$</th>
+            {%endif%}
+    
+  </table>
+{%else%}
+<div class = "alert alert-danger">ERROR</div>
+{%endif%}
+{%endblock%}

@@ -1,0 +1,19 @@
+{%extends "layout.html" %}
+{%block body%}
+{% if session["logged_in"] == "False" %}
+<h3>Sign In</h3>
+<hr><hr>
+{% from "includes/formhelpers.html" import render_field %}
+<form method="POST">
+    {{ render_field(form.username_login, class = "form-control")}}
+    {{ render_field(form.password_login, class = "form-control") }}
+    <button type="submit" class="btn btn-secondary">Sign In</button>
+</form>
+
+{%else%}
+<div class="jumbotron text-center">
+    <h2>You have already signed in</h2>
+</div>
+{%endif%}
+
+{%endblock%}
