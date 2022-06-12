@@ -4,6 +4,10 @@ from wtforms import Form,StringField,TextAreaField,PasswordField,validators,Floa
 from passlib.hash import sha256_crypt
 from functools import wraps
 from datetime import datetime
+from binance.client import Client
+from apscheduler.schedulers.background import BackgroundScheduler
+import atexit
+
 # Login Decorator Check
 def login_required(f):
     @wraps(f)
@@ -32,6 +36,7 @@ app.config["MYSQL_PASSWORD"] = ""
 app.config["MYSQL_DB"] = "coinadvisor"
 app.config["MYSQL_CURSORCLASS"] = "DictCursor"
 mysql = MySQL(app)
+coins = []
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -92,12 +97,42 @@ def account():
 @app.route("/listcoin")
 @login_required
 def listcoin():
+    total = 0
+    totalamount = 0
+    profitsums = 0
+    lossums = 0
     cursor = mysql.connection.cursor()
     query = "Select * From coins where position = %s"
     listed_coins = cursor.execute(query,("OPEN",))
     if listed_coins:
-        all_info = cursor.fetchall()
-        return render_template("listcoin.html",all_info = all_info)
+        lastdict = dict()
+        percentdict = dict()
+        price_now = dict()
+        coin_allinfo = cursor.fetchall()
+        for item in coin_allinfo:
+            coins.append(item["name"].upper())
+        client = Client(apiKey,apiSecurity)
+        prices = client.get_all_tickers()
+        for dicti in prices:
+            symbola = dicti["symbol"]
+            if symbola in coins:
+                lastdict[symbola] = dicti.get("price")
+        for coinsdb in coin_allinfo:
+            newnamedb = coinsdb["name"].upper()
+            buypricedb = coinsdb["buyprice"]
+            currentprice = lastdict.get(newnamedb)
+            percent = (float(currentprice) - float(buypricedb))/float(buypricedb)*100
+            percentdict[newnamedb] = round(percent,3)
+            price_now[newnamedb] = round(float(currentprice),4)
+        for info in coin_allinfo:
+            total+=info["cost"]
+            if percentdict.get(info["name"].upper())*info["cost"]/100>0:
+                profitsums+=percentdict.get(info["name"].upper())*info["cost"]/100
+            else:
+                lossums+=percentdict.get(info["name"].upper())*info["cost"]/100
+            totalamount+=percentdict.get(info["name"].upper())*info["cost"]/100
+            
+        return render_template("listcoin.html",coin_allinfo = coin_allinfo,percentdict = percentdict,total = total,totalamount = totalamount, price_now = price_now, profitsums = profitsums, lossums = lossums)
     else:
         return render_template("listcoin.html")
 # Coin Entry
@@ -136,7 +171,7 @@ def coinentry():
             flash("{} Coin succesfully updated".format(coinname_entry),"success")
             return redirect(url_for("coinentry"))
         else:
-            query = "Insert into coins(name,buyprice,cost) VALUES(%s,%s,%s)"
+            query = "Insert into coins(name,buyprice,cost,position) VALUES(%s,%s,%s,'OPEN')"
             cursor.execute(query,(coinname_entry,buyprice_entry,cost_entry))
             mysql.connection.commit()
             cursor.close()
@@ -170,8 +205,8 @@ def coinsell():
             difference = round(difference,3)
             percent = abs(((sellprice_sell/buyprice_sell)*100)-100)
             percent = round(percent,3)
-            query = "Update coins SET sellprice = %s,position = %s where name = %s"
-            val = (sellprice_sell,"CLOSED",coinname_sell)
+            query = "Update coins SET sellprice = %s,position = %s where id = %s"
+            val = (sellprice_sell,"CLOSED",coin_allinfo["id"])
             cursor.execute(query, val)
             mysql.connection.commit()
             cursor.close()
@@ -204,7 +239,7 @@ def delete(id):
         cursor.execute(query,(id,))
         mysql.connection.commit()
         flash("Coin has been deleted","danger")
-        return(redirect(url_for("index")))
+        return(redirect(url_for("account")))
     else:
         flash("No coin to delete","danger")
         return redirect(url_for("index"))
@@ -213,10 +248,10 @@ def delete(id):
 @login_required
 def update(id):
     form = UpdateForm(request.form)
-    sellprice_update = form.sellprice_update.data
-    if sellprice_update.find(","):
-        sellprice_update = sellprice_update.replace(",",".")
     if  request.method == "POST" and form.validate():
+        sellprice_update = form.sellprice_update.data
+        if "," in sellprice_update:
+            sellprice_update = sellprice_update.replace(",",".")
         cursor = mysql.connection.cursor()
         query = "Select * from coins where id = %s"
         result = cursor.execute(query,(id,))
@@ -247,7 +282,8 @@ def details(id):
         all_info = cursor.fetchall()
         name = clicked_coin["name"]
         for info in all_info:
-            net_profit+=(info["cost"]/info["buyprice"])*(info["sellprice"]-info["buyprice"])
+            if info["position"] == "CLOSED":
+                net_profit+=(info["cost"]/info["buyprice"])*(info["sellprice"]-info["buyprice"])
         return render_template("coin.html", all_info = all_info,name = name, net_profit = net_profit)
         
     else:
@@ -276,8 +312,6 @@ def login():
         else:
             flash("There is no user such {}".format(username_login),"danger")
             return redirect(url_for("login"))
-        mysql.connection.commit() 
-        cursor.close()
     else:
         return render_template("login.html",form=form)
 #User Login
@@ -304,5 +338,7 @@ def register():
 
     else:
         return render_template("register.html",form=form)
+
+
 if __name__=="__main__":
     app.run(debug=True)
