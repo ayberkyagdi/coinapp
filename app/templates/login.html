@@ -1,6 +1,6 @@
 {%extends "layout.html" %}
 {%block body%}
-{% if session["logged_in"] != "True" %}
+{% if session["logged_in"] != True %}
 <h3>Sign In</h3>
 <hr><hr>
 {% from "includes/formhelpers.html" import render_field %}

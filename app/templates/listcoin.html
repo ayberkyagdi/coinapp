@@ -1,0 +1,76 @@
+{%extends "layout.html" %}
+
+
+{%block body%}
+<h3>Coin List</h3>
+<hr>
+<hr>
+<table class="table">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Date</th>
+        <th scope="col">Coin</th>
+        <th scope="col">Average Price</th>
+        <th scope="col">Current Price</th>
+        <th scope="col">Total Cost</th>
+        <th scope="col">Quantity</th>
+        <th scope="col">Percent</th>
+        <th scope="col">Amount</th>
+
+
+
+      </tr>
+    </thead>
+    {%if coin_allinfo %}
+      {%for info in coin_allinfo%}  
+        <tbody>
+        <tr>
+            <th scope="row">{{loop.index}}.</th>
+            <td>{{info.date.strftime("%d/%m/%Y %H:%M:%S")}}</td>
+            <td>{{info.name|upper}}</td>
+            <td>{{info.buyprice|round(6)}}</td>
+            <td>{{price_now.get(info.name.upper())}}</td>
+            <td>{{info.cost|round(6)}}</td>
+            <td>{{(info.cost/info.buyprice)|round(6)}}</td>
+            {%if percentdict.get(info.name.upper()) >0 %}
+            <td class="text-success">%{{percentdict.get(info.name.upper())}}</td>
+            <td class="text-success">+{{((percentdict.get(info.name.upper())/100)*info.cost)|round(4)}}$</td>
+            {%else%}
+            <td class="text-danger">%{{percentdict.get(info.name.upper())}}</td>
+            <td class="text-danger">{{((percentdict.get(info.name.upper())/100)*info.cost)|round(4)}}$</td>
+            {%endif%}
+        </tr>
+        
+        
+    </tbody>
+    {% endfor %}
+    <th scope="row"></th>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td><strong>Total:{{total|round(3)}}$</strong></td>
+            <td>      </td>
+            <td></td>
+            <td class="text-success">Profit:{{profitsums|round(3)}}$</td>
+            <td class="text-danger">Loss:{{lossums|round(3)}}$</td>
+            {%if totalamount>0 %}
+            <td class="text-success">Net:{{totalamount|round(3)}}$</td>
+            {%else%}
+            <td class="text-danger">Net:{{totalamount|round(3)}}$</td>
+            {%endif%}
+  </table>
+{%else%}
+<div class = "alert alert-danger">There are currently no registered coins</div>
+{%endif%}
+
+
+<style>
+  body {
+      background-color: rgb(190, 243, 174);
+  }
+
+  
+</style>
+{%endblock%}

@@ -23,7 +23,7 @@
         <tbody>
         <tr>
             <th scope="row">{{loop.index}}.</th>
-            <td>{{info.date.strftime("%m/%d/%Y %H:%M:%S")}}</td>
+            <td>{{info.date.strftime("%d/%m/%Y %H:%M:%S")}}</td>
             <td><a href="/coin/{{info.id}}"style="color:purple;">{{info.name}}</a></td>
             <td>{{info.buyprice|round(6)}}</td>
             <td>{{info.sellprice|round(6)}}</td>

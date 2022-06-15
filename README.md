@@ -1,1 +1,0 @@
-Just built a website that stores the list of coins that user enters andgive real-time info to calculate profit or loss by using API.
